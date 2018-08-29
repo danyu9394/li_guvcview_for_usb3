@@ -1,13 +1,13 @@
 # li_guvcview_for_usb3
-
-__Modified based on guveview version2.0.5.__
+guvcview is a simple interface for capturing and viewing video from v4l2 devices, with a special emphasis for the linux uvc driver. This is Leopard Imaging modified version for guvcivew.
+_Modified based on guveview version2.0.5._
 - Support viewing most LI-USB3 bayer sensors 
 - Capture raw frames 
 - Registers read/write
 
-##Install guvcview
-###dependencies:
-make sure the following libraries have installed
+## Install guvcview
+### Dependencies:
+Make sure the following libraries have installed
 ```
 #/bin/sh
 sudo apt-get install intltool
@@ -28,7 +28,7 @@ sudo apt-get install qtbase5-dev
 sudo apt-get install libgsl0-dev
 ```
 
-###build configuration:
+### Build Configuration:
 After running the following commands, guvcview executable will be appeared under __/guvcview__
 ```
 #/bin/sh
@@ -39,7 +39,7 @@ make
 sudo make install
 ```
 
-##Run application:
+## Run Application:
 First identify your camera device using:
 ```
 lsusb
@@ -50,11 +50,12 @@ Run your camera device by changing /dev/video#
 ./guvcview/guvcview -d /dev/video0  
 ```
 
-#Add more sensors for debayering
+## Add more sensors for debayering
+
 Inside __frame_decode.c__, under __case V4L2_PIX_FMT_YUYV__, add the pixel order accordingly for color sensor.
 Use mono2yu12 for monochrome sensor.
 
-##Test platform:
+## Test platform:
 __4.15.0-32-generic #35~16.04.1-Ubuntu__
 __4.15.0-20-generic #21~Ubuntu 18.04.1 LTS__
 
