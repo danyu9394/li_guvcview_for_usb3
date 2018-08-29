@@ -1,0 +1,10 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libgviewrender
+Description: guvcview render library.
+Version: 2.0.5
+Libs: -L${libdir} -lgviewrender
+Cflags: -I${includedir}/guvcview-2/libgviewrender
