@@ -956,6 +956,142 @@ int decode_v4l2_frame(v4l2_dev_t *vd, v4l2_frame_buff_t *frame)
 					mono2yu12(frame->raw_frame, frame->yuv_frame, width, height, 4);//in out
 				}
 
+				/* for LI-OV7676, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00bd) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-OV2732, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00be) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX363, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00bf) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-OV9281 RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c0) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX334, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c1) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX335, RAW10, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c2) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-OS05A20, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c3) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-AR0138, RAW12, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c4) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX390, RAW12, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c6) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX324, RAW12, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c7) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-OV2311, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00c8) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX477, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00cd) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX377, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00ce) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-OV9712, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00cf) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX298, RAW10, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00d0) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-RAA462113, RAW12, right shift 4 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00d1) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-IMX274, RAW10, right shift 2 bits, pixel order = GRBG*/
+				else if (sensorid ==0x00d4) {		
+					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
 				/* for LI-PYTHON1300-BAYER, RAW12, right shift 4 bits, pixel order = GRBG*/
 				else if (sensorid ==0x00d5) {		
 					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
