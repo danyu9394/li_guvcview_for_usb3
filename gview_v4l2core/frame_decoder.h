@@ -75,4 +75,10 @@ void bayer16_convert_bayer8(uint8_t *inbuf, uint8_t *outbuf, int width, int heig
  */
 void mono2yu12 (uint8_t *inbuf, uint8_t *outbuf, int width, int height, int shift); 
 
+/*
+ * For Leopard Monochrome Camera RAW datatype conversion
+ * Right shift certain bits for RAW datatypes(16 bits with MSB filled with 0)  
+ */
+void mono2yu12_imx226 (uint8_t *inbuf, uint8_t *outbuf, int width, int height, int shift); 
+
 #endif

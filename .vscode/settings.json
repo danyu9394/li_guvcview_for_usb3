@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "cstring": "c"
+        "cstring": "c",
+        "system_error": "c",
+        "type_traits": "c",
+        "array": "c",
+        "fstream": "c"
     }
 }

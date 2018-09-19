@@ -111,8 +111,12 @@ uint8_t get_info_xu_control(v4l2_dev_t *vd, uint8_t unit, uint8_t selector);
  * returns: 0 if query succeded or errno otherwise
  */
 int query_xu_control(v4l2_dev_t *vd, uint8_t unit, uint8_t selector, uint8_t query, void *data);
-void error_handle();
-int SensorRegRead(v4l2_dev_t *vd, int regAddr);
-void SensorRegWrite(v4l2_dev_t *vd, int regAddr, int regVal);
 
+void li_error_handle();
+void li_fx3_set_i2c_cmd(v4l2_dev_t *vd, int rw_flag, int bufcnt, int slaveAddr, int regAddr,unsigned char *i2c_data);
+void li_fx3_get_i2c_cmd(v4l2_dev_t *vd, int rw_flag, int bufcnt, int slaveAddr, int regAddr,unsigned char *i2c_data);
+int li_sensor_reg_read(v4l2_dev_t *vd, int regAddr);
+void li_sensor_reg_write(v4l2_dev_t *vd, int regAddr, int regVal);
+void li_sensor_get_gain_control_rgb(v4l2_dev_t *vd);
+int li_sensor_set_gain_control_rgb(v4l2_dev_t *vd, int g_rGain, int g_grGain, int g_gbGain, int g_bGain);
 #endif

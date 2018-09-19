@@ -33,22 +33,31 @@
 
 extern int verbosity;
 
+/*
+ * extension unit defined in Leopard Imaging USB3.0
+ */
 #define LENGTH_OF_XU_MAP_LEOPARD (15)
-#define XU_MODE_SWITCH 0x01
-#define XU_WINDOW_REPOSITION 0x02
-#define XU_LED_MODES 0x03
-#define XU_GAIN_CONTROL_RGB 0x04
-#define XU_GAIN_CONTROL_A 0x05
-#define XU_EXPOSURE_TIME 0x06
-#define XU_UUID_HWFW_REV 0x07
-#define XU_DEFECT_PIXEL_TABLE 0x08
-#define XU_SOFT_TRIGGER 0x09
-#define XU_TRIGGER_MODE 0x0b
-#define XU_TRIGGER_DELAY_TIME 0x0a
-#define XU_SENSOR_REGISTER_CONFIGURATION 0x0c
-#define XU_EXTENSION_INFO 0x0d
-#define XU_GENERIC_REG_RW 0x0e
-#define XU_GENERIC_I2C_RW 0x10
+#define LI_XU_MODE_SWITCH 0x01
+#define LI_XU_WINDOW_REPOSITION 0x02
+#define LI_XU_LED_MODES 0x03
+#define LI_XU_GAIN_CONTROL_RGB 0x04
+#define LI_XU_GAIN_CONTROL_A 0x05
+#define LI_XU_EXPOSURE_TIME 0x06
+#define LI_XU_UUID_HWFW_REV 0x07
+#define LI_XU_DEFECT_PIXEL_TABLE 0x08
+#define LI_XU_SOFT_TRIGGER 0x09
+#define LI_XU_TRIGGER_MODE 0x0b
+#define LI_XU_TRIGGER_DELAY_TIME 0x0a
+#define LI_XU_SENSOR_REGISTER_CONFIGURATION 0x0c
+#define LI_XU_EXTENSION_INFO 0x0d
+#define LI_XU_SENSOR_REG_RW 0x0e
+#define LI_XU_GENERIC_I2C_RW 0x10
+
+/*
+ * define the value array for storing
+ * the query configuration values
+ */ 
+unsigned char value[256+6] = {0};
 
 /*
  * XU controls
@@ -92,24 +101,20 @@ static struct uvc_menu_info led_menu_entry[4] = {{0, N_("Off")},
 												 {1, N_("On")},
 												 {2, N_("Blinking")},
 												 {3, N_("Auto")}};
+/* Leopard xu query struct*/
+struct uvc_xu_control_query xu_query = {
+	.unit		= 3, 			//extension unit id, has to be unit 3
+	.selector	= 1, 			//control selector, TD
+	.query		= UVC_GET_CUR,	//request code to send to the device
+	.size		= 4, 			//TD, control data size (in bytes)
+	.data		= value,		//control value
+};
 
-/* 
- * define the value array for storage
- * the setting and getting configuration value
- */
-unsigned char value[64] = {0};
-
-/* Leopard extension unit register read/write for camera sensor*/ 
-#define UVC_XU_REG_RW 0x0e
-
-/* Leopard defined xu query struct */
-struct uvc_xu_control_query xu_ctrl_query =
-	{
-		.unit = 3,
-		.selector = UVC_XU_REG_RW,
-		.query = UVC_SET_CUR,
-		.size = 5,
-		.data = value};
+typedef struct reg_seq{
+	unsigned char regdata_width;
+	unsigned short regaddr;
+	unsigned short regval;
+}reg_seq;
 
 /* known xu control mappings */
 static struct uvc_xu_control_mapping xu_mappings[] =
@@ -547,45 +552,153 @@ int query_xu_control(v4l2_dev_t *vd, uint8_t unit, uint8_t selector, uint8_t que
 	return err;
 }
 
-// hanle the error for opening the device
-void error_handle()
+/* 
+`* handle the error for opening the device
+ * On success 0 is returned. ON error -1 is returned and errno is set appropriately
+ */
+void li_error_handle()
 {
 	int res = errno;
 
 	const char *err;
-	switch (res)
+	switch(res)
 	{
-	case ENOENT:
-		err = "Extension unit or control not found";
-		break;
-	case ENOBUFS:
-		err = "Buffer size does not match control size";
-		break;
-	case EINVAL:
-		err = "Invalid request code";
-		break;
-	case EBADRQC:
-		err = "Request not supported by control";
-		break;
-	default:
-		err = strerror(res);
-		break;
+		case ENOENT:	err = "Extension unit or control not found"; break;
+		case ENOBUFS:	err = "Buffer size does not match control size"; break;
+		case EINVAL:	err = "Invalid request code"; break;
+		case EBADRQC:	err = "Request not supported by control"; break;
+		case EFAULT:	err = "The data pointer references an incessible memory area"; break;
+		default:		err = strerror(res); break;
 	}
 
 	printf("failed %s. (System code: %d) \n", err, res);
-
-	return;
 }
 
+/*
+ *	Byte0: bit7 0:read;1:write. bit[6:0] regAddr width, 1:8-bit register address ; 2:16-bit register address
+ *		   0x81: write, regAddr is 8-bit; 0x82: write, regAddr is 16-bit
+ *		   0x01: read,  regAddr is 8-bit; 0x02: read,  regAddr is 16-bit
+ *	Byte1: Length of register data,1~256
+ *	Byte2: i2c salve address 8bit
+ *	Byte3: register address
+ *	Byte4: register address(16bit) or register data
+ *
+ *  Register data starts from Byte4(8bit address) or Byte5(16bit address)
+ */
+void li_fx3_set_i2c_cmd(v4l2_dev_t *vd, int rw_flag, int bufcnt, int slaveAddr, int regAddr,unsigned char *i2c_data)
+{
+	int regVal = 0;
+	xu_query.selector = LI_XU_GENERIC_I2C_RW;
+	xu_query.query = UVC_SET_CUR;
+	xu_query.size = 256+6;
+
+	memset (&value, 0x00, sizeof(value));
+	value[0] = rw_flag;
+	value[1] = bufcnt-1;
+	value[2] = slaveAddr>>8;
+	value[3] = slaveAddr&0xff;
+	value[4] = regAddr>>8;
+	value[5] = regAddr&0xff;
+	if(bufcnt==1) {
+		value[6] = *i2c_data;
+		regVal = value[6];
+	}
+	else
+	{
+		value[6] = *(i2c_data+1);
+		value[7] = *i2c_data;
+		regVal = (value[6] << 8) + value[7];
+	}
+
+	if(ioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query) != 0)
+		li_error_handle();
+	else
+		 //printf("set ioctl for fd=%d success\n", fd);
+		 printf("Write REG[0x%x]: 0x%x\r\n",regAddr, regVal);
+
+}
+
+void li_fx3_get_i2c_cmd(v4l2_dev_t *vd, int rw_flag, int bufcnt, int slaveAddr, int regAddr,unsigned char *i2c_data)
+{
+	int regVal = 0;
+	xu_query.selector = LI_XU_GENERIC_I2C_RW;
+	xu_query.query = UVC_SET_CUR;
+	xu_query.size = 256+6;
+
+	//setting the read configuration
+	memset (&value, 0x00, sizeof(value));
+	value[0] = rw_flag;
+	value[1] = bufcnt-1;
+	value[2] = slaveAddr>>8;
+	value[3] = slaveAddr&0xff;
+	value[4] = regAddr>>8;
+	value[5] = regAddr&0xff;
+	value[6] = 0;
+	value[7] = 0;
+
+	if(ioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query) != 0)
+		li_error_handle();
+
+	//getting the value
+	xu_query.query = UVC_GET_CUR;
+	value[6] = 0;
+	value[7] = 0;
+	if(ioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query) != 0)
+		li_error_handle();
+	
+	if(bufcnt==1) {
+		regVal = value[6];
+	}
+	else
+	{
+		regVal = (value[6] << 8) + value[7];
+	}
+	//printf("get ioctl for fd=%d success\n", fd);
+	printf("Read REG[0x%x]: 0x%x\r\n",regAddr, regVal);
+
+}
+
+/* inside Leopard XU firmware to get the sensor register address
+ * need to apply UVC_SET_CUR before UVC_GET_CUR 
+ * for read the sensor register value
+ */
+int li_sensor_reg_read(v4l2_dev_t *vd, int regAddr)
+{
+	int regVal = 0;
+	int err = 0;
+	xu_query.selector = LI_XU_SENSOR_REG_RW;
+	xu_query.query = UVC_SET_CUR;
+	xu_query.size = 5;
+
+	// setting the read configuration
+	value[0] = 0; // indicate for read
+	value[1] = (regAddr >> 8) & 0xff;
+	value[2] = regAddr & 0xff;
+	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query)) < 0)
+		li_error_handle();
+
+	// getting the value
+	xu_query.query = UVC_GET_CUR;
+	value[0] = 0;
+	value[3] = 0;//regVal MSB
+	value[4] = 0;//regVal LSB
+	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query)) < 0)
+		li_error_handle();
+
+	regVal = (value[3] << 8) + value[4];
+	printf("REG[0x%x] = 0x%x\n", regAddr, regVal);
+
+	return regVal;
+}
 
 // write the sensor register value
-void SensorRegWrite(v4l2_dev_t *vd, int regAddr, int regVal)
+void li_sensor_reg_write(v4l2_dev_t *vd, int regAddr, int regVal)
 {
 	int err = 0;
 
-	xu_ctrl_query.selector = UVC_XU_REG_RW;
-	xu_ctrl_query.query = UVC_SET_CUR;
-	xu_ctrl_query.size = 5;
+	xu_query.selector = LI_XU_SENSOR_REG_RW;
+	xu_query.query = UVC_SET_CUR;
+	xu_query.size = 5;
 	
 	// setting the read configuration
 	value[0] = 1; // indicate for write
@@ -594,36 +707,55 @@ void SensorRegWrite(v4l2_dev_t *vd, int regAddr, int regVal)
 	value[3] = (regVal >> 8) & 0xff;
 	value[4] = regVal & 0xff;
 
-	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_ctrl_query)) < 0)
-		error_handle();
+	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query)) < 0)
+		li_error_handle();
 }
 
-// read the sensor register value
-int SensorRegRead(v4l2_dev_t *vd, int regAddr)
+// get Leopard sensor RGB gain, support AR0330, M034_AP0100, MT9031, OV10640 so far
+int li_sensor_set_gain_control_rgb(v4l2_dev_t *vd, int g_rGain, int g_grGain, int g_gbGain, int g_bGain)
 {
 	int regVal = 0;
 	int err = 0;
-	xu_ctrl_query.selector = UVC_XU_REG_RW;
-	xu_ctrl_query.query = UVC_SET_CUR;
-	xu_ctrl_query.size = 5;
+	xu_query.selector = LI_XU_GAIN_CONTROL_RGB;
+	xu_query.query = UVC_SET_CUR;
+	xu_query.size = 8;
 
-	// setting the read configuration
-	value[0] = 0; // indicate for read
-	value[1] = (regAddr >> 8) & 0xff;
-	value[2] = regAddr & 0xff;
-	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_ctrl_query)) < 0)
-		error_handle();
+	// getting configuration
+	value[0] = g_rGain & 0xff; 	//rGain LSB
+	value[1] = g_rGain >> 8; 	//rGain MSB
+	value[2] = g_grGain & 0xff;	//grGain LSB
+	value[3] = g_grGain >> 8;	//grGain MSB
+	value[4] = g_gbGain & 0xff;	//gbGain LSB
+	value[5] = g_gbGain >> 8;   //gbGain MSB
+	value[6] = g_bGain & 0xff;  //bGain LSB
+	value[7] = g_bGain >> 8;	//bGain MSB
+	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query)) < 0)
+		li_error_handle();
 
-	// getting the value
-	xu_ctrl_query.query = UVC_GET_CUR;
-	value[0] = 0;
-	value[3] = 0;
-	value[4] = 0;
-	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_ctrl_query)) < 0)
-		error_handle();
+	printf("set RGB gain succesfully\r\n");
 
-	regVal = (value[3] << 8) + value[4];
-	printf("REG[0x%x] = 0x%x\n", regAddr, regVal);
+	return err;
+}
 
-	return regVal;
+// write the sensor register value
+void li_sensor_get_gain_control_rgb(v4l2_dev_t *vd)
+{
+	int err = 0;
+	int i = 0;
+	xu_query.selector = LI_XU_GAIN_CONTROL_RGB;
+	xu_query.query = UVC_GET_CUR;
+	xu_query.size = 8;
+
+	for (i = 0; i < 8; i++) {
+		value[i] = 0;
+	}
+	if ((err = xioctl(vd->fd, UVCIOC_CTRL_QUERY, &xu_query)) < 0)
+		li_error_handle();
+	uint16_t g_rGain = 0, g_grGain = 0, g_gbGain = 0, g_bgGain = 0;
+	g_rGain = (value[1] << 8) + value[0]; 	//rGain
+	g_grGain = (value[3] << 8) + value[2]; 	//grGain
+	g_gbGain = (value[5] << 8) + value[4]; 	//gbGain
+	g_bgGain = (value[7] << 8) + value[6]; 	//bGain
+	printf("get RGB gain:\r\nrGain = 0x%x,\r\n grGain = 0x%x,\r\n gbGain = 0x%x,\r\n grGain = 0x%x\r\n ", g_rGain, g_grGain, g_gbGain, g_bgGain);
+	
 }

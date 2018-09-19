@@ -936,7 +936,7 @@ int decode_v4l2_frame(v4l2_dev_t *vd, v4l2_frame_buff_t *frame)
 			}
 			/*get sensor id for different Leopard bayer cameras*/
 			int sensorid = my_device_list->list_devices[vd->this_device].product;
-
+			//printf("sensor id is 0x%x\r\n", sensorid);
 			if(vd->isbayer>0)
 			{
 				if (!(frame->tmp_buffer))
@@ -1004,11 +1004,11 @@ int decode_v4l2_frame(v4l2_dev_t *vd, v4l2_frame_buff_t *frame)
 					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
 				}
 
-				/* for LI-OS05A20, RAW10, right shift 2 bits, pixel order = GRBG*/
+				/* for LI-IMX324, RAW10, right shift 2 bits, pixel order = GRBG*/
 				else if (sensorid ==0x00c3) {		
 					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
-					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
-					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
+					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
+					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 2);
 					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
 				}
 
@@ -1028,7 +1028,7 @@ int decode_v4l2_frame(v4l2_dev_t *vd, v4l2_frame_buff_t *frame)
 					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
 				}
 
-				/* for LI-IMX324, RAW12, right shift 4 bits, pixel order = GRBG*/
+				/* ???????for LI-IMX324, RAW12, right shift 4 bits, pixel order = GRBG*/
 				else if (sensorid ==0x00c7) {		
 					frame->tmp_buffer1 = calloc(width*height*3, sizeof(uint8_t));
 					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,4);
@@ -1042,6 +1042,11 @@ int decode_v4l2_frame(v4l2_dev_t *vd, v4l2_frame_buff_t *frame)
 					bayer16_convert_bayer8(frame->raw_frame, frame->tmp_buffer1, width, height,2);
 					bayer_to_rgb24 (frame->tmp_buffer1, frame->tmp_buffer, width, height, 1);
 					rgb24_to_yu12(frame->yuv_frame, frame->tmp_buffer, width, height);
+				}
+
+				/* for LI-AR0144, RAW12, right shift 4 bits, mono color*/
+				else if (sensorid ==0x00ca) { 
+					mono2yu12(frame->raw_frame, frame->yuv_frame, width, height, 4);//in out
 				}
 
 				/* for LI-IMX477, RAW10, right shift 2 bits, pixel order = GRBG*/
@@ -1350,6 +1355,37 @@ void mono2yu12 (uint8_t *inbuf, uint8_t *outbuf, int width, int height, int shif
 	for (i = 0; i < height; i++) {
 		for (j = 0; j < width; j++) {
 			outbuf[i * width + j] = (inptr[i * width + j] >> shift);
+		}
+	}
+	for (i = 0; i < height/2; i++) {
+		for (j = 0; j < width; j++) {
+			outbuf[width * height + i * width  + j] = 128;//u v set to 0x80
+			
+		}
+	}
+
+}
+
+
+/*
+ * For Leopard Monochrome Camera RAW datatype conversion
+ * Right shift certain bits for RAW datatypes(16 bits with MSB filled with 0)  
+ */
+void mono2yu12_imx226 (uint8_t *inbuf, uint8_t *outbuf, int width, int height, int shift) 
+{
+	int i = 0, j = 0;
+	uint16_t *inptr = (uint16_t *) inbuf;
+	uint16_t tmp;
+	uint16_t offset = 490, gain = 4;
+
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < width; j++) {
+			tmp = inptr[i * width + j];
+			tmp = tmp - offset;
+			tmp = tmp * gain;
+			if (tmp > 255 * ( 1 << shift))
+				tmp = 255 * ( 1 << shift);
+			outbuf[i * width + j] = (tmp >> shift);
 		}
 	}
 	for (i = 0; i < height/2; i++) {

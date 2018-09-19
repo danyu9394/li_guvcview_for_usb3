@@ -887,10 +887,53 @@ int gui_attach_gtk3(int width, int height)
 		gtk_grid_attach (GTK_GRID(tab_4), tab_4_label, 1, 0, 1, 1);
 
 		gtk_notebook_append_page(GTK_NOTEBOOK(tab_box), scroll_4, tab_4);
+
+		/*----------------------- Register controls Tab ------------------------------*/
+
+		GtkWidget *scroll_5 = gtk_scrolled_window_new(NULL,NULL);
+		gtk_scrolled_window_set_placement(GTK_SCROLLED_WINDOW(scroll_5), GTK_CORNER_TOP_LEFT);
+		gtk_widget_show(scroll_5);
+
+		/*
+		 * viewport is only needed for gtk < 3.8
+		 * for 3.8 and above controls tab can be directly added to scroll1
+		 */
+		GtkWidget* viewport5 = gtk_viewport_new(NULL,NULL);
+		gtk_widget_show(viewport5);
+
+		gtk_container_add(GTK_CONTAINER(scroll_5), viewport5);
+
+		//gui_attach_gtk3_audioctrls(viewport5);
+		gui_attach_gtk3_v4l2ctrls(viewport5);
+
+		GtkWidget *tab_5 = gtk_grid_new();
+		gtk_widget_show (tab_5);
+
+		GtkWidget *tab_5_label = gtk_label_new(_("Register Controls"));
+		gtk_widget_show (tab_5_label);
+		/** check for files */
+		gchar *tab_5_icon_path = g_strconcat (PACKAGE_DATA_DIR,"/pixmaps/guvcview/audio_controls.png",NULL);
+		/** don't test for file - use default empty image if load fails */
+		/** get icon image*/
+		GtkWidget *tab_5_icon = gtk_image_new_from_file(tab_5_icon_path);
+		gtk_widget_show (tab_5_icon);
+
+		g_free(tab_5_icon_path);
+		gtk_grid_attach (GTK_GRID(tab_5), tab_5_icon, 0, 0, 1, 1);
+		gtk_grid_attach (GTK_GRID(tab_5), tab_5_label, 1, 0, 1, 1);
+
+		gtk_notebook_append_page(GTK_NOTEBOOK(tab_box), scroll_5, tab_5);
+	
+
 	}
 
 	/* Attach the notebook (tabs) */
 	gtk_box_pack_start(GTK_BOX(maintable), tab_box, TRUE, TRUE, 2);
+
+
+		
+	/* Attach the notebook (tabs) */
+	//gtk_box_pack_start(GTK_BOX(maintable), tab_box, TRUE, TRUE, 2);
 
 	/*-------------------------- Status bar ------------------------------------*/
 	status_bar = gtk_statusbar_new();

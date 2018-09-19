@@ -56,6 +56,17 @@ Run your camera device by changing /dev/video#
 Inside __frame_decode.c__, under __case V4L2_PIX_FMT_YUYV__, add the pixel order accordingly for color sensor.
 Use mono2yu12 for monochrome sensor.
 
+
+##Capture and view raw image
+Captured raw image can be viewed by imageJ on windows and linux. 
+Select the following when you want to view the raw iamge:
+
+- Image type : 16-bit Unsigned
+- Width: 4000 pixels
+- height: 3000 pixels
+- Select "Little-endian byte order"
+
+After opening the image, you  can adjust image contrast in __Process__ then __Enhance Contrast__, select __Equalize histogram__
 ## Test platform:
 __4.15.0-32-generic #35~16.04.1-Ubuntu__
 __4.15.0-20-generic #21~Ubuntu 18.04.1 LTS__

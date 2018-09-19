@@ -259,7 +259,17 @@ int enum_v4l2_devices()
         printf("  %s\n  %s\n",
             udev_device_get_sysattr_value(dev,"manufacturer"),
             udev_device_get_sysattr_value(dev,"product"));
-                
+    #if 0    
+        printf("  VID/PID: %s %s\n",
+            udev_device_get_sysattr_value(dev,"idVendor"),
+            udev_device_get_sysattr_value(dev, "idProduct"));
+        printf("  serial: %s\n",
+            udev_device_get_sysattr_value(dev, "serial"));
+        printf("  busnum: %s\n",
+            udev_device_get_sysattr_value(dev, "busnum"));
+        printf("  devnum: %s\n",
+            udev_device_get_sysattr_value(dev, "devnum"));
+    #endif            
         udev_device_unref(dev);
     }
     /* Free the enumerator object */
